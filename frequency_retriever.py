@@ -2,38 +2,49 @@ import sys
 import time
 import subprocess
 import os
+from variant_unifier import unify_variants
+from data_updater import update_data
 
 #function to retrieve frequencies
-def freq_retriever(chrom_pos):	#function to retrieve frequencies
+def freq_retriever(chrom_pos, filtered_vcf):	#function to retrieve frequencies
 	numparvar = len(chrom_pos)	#number of partial variants
-	subprocess.Popen(['samtools', 'sort', 'bamfile.bam', '-o', 'bamfile_sorted.bam']).wait()
-	subprocess.Popen(['samtools', 'index', 'bamfile_sorted.bam']).wait()
+	bamfile = temp_dir + '/bamfile.bam'
+	sorted_bamfile = temp_dir + '/bamfile_sorted.bam'
+	subprocess.Popen(['samtools', 'sort', bamfile, '-o', sorted_bamfile]).wait()
+	subprocess.Popen(['samtools', 'index', sorted_bamfile]).wait()
+	trim_ref = temp_dir + '/trim.fasta'
+	header_removed = temp_dir + '/vcf_hr.vcf'
 	for i in range(0, numparvar):	#creating array of commands to create vcf file
-		process_call_variants = subprocess.Popen(['freebayes', '-f', 'ref_trm.fasta', '-F', '0.001', '--pooled-continuous', '--haplotype-length', '-1', '-r', chrom_pos[i], 'bamfile_sorted.bam'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		subprocess.Popen([python, 'header_remover.py', str(i), 'vcf_hr.vcf'], stdin=process_call_variants.stdout).wait()	#append on the file
+		process_call_variants = subprocess.Popen(['freebayes', '-f', trim_ref, '-F', '0.001', '--pooled-continuous', '--haplotype-length', '-1', '-r', chrom_pos[i], sorted_bamfile], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		subprocess.Popen([python, 'header_remover.py', str(i), header_removed], stdin=process_call_variants.stdout).wait()	#append on the file
         #Break multi-allelic sites
-	process_breakmulti = subprocess.Popen(['vcfbreakmulti', 'vcf_hr.vcf'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	process_breakmulti = subprocess.Popen(['vcfbreakmulti', header_removed], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         #Decompose biallelic sites
 	process_allelicprimitives = subprocess.Popen(['vcfallelicprimitives', '-kg'], stdin=process_breakmulti.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         #Fix the field of alternate allelic depth
 	process_fix_depth = subprocess.Popen(['./vcf_ad_fix.sh'], stdin=process_allelicprimitives.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         #normalise the vcf
-	process_normalise = subprocess.Popen(['bcftools', 'norm', '-f', 'ref_trm.fasta', '-m-'], stdin=process_fix_depth.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	process_normalise = subprocess.Popen(['bcftools', 'norm', '-f', trim_ref, '-m-'], stdin=process_fix_depth.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         #relocate variants
-	subprocess.Popen([python, 'variant_relocator.py', 'relocated_fr.vcf', str(shoulder_size+1), str(rDNA_unit_size+shoulder_size), '1'], stdin=process_normalise.stdout).wait()	
+	relocated_fr_vcf = temp_dir + '/relocated_fr.vcf'
+	subprocess.Popen([python, 'variant_relocator.py', relocated_fr_vcf, str(shoulder_size+1), str(rDNA_unit_size+shoulder_size), '1'], stdin=process_normalise.stdout).wait()
         #sort variants
-	with open ('sorted_fr.vcf', 'w') as sortedfile:                      #file object to write on the file
-		subprocess.Popen(['bcftools', 'sort', 'relocated_fr.vcf'], stdout=sortedfile, stderr=subprocess.PIPE).wait()
-	subprocess.Popen([python, 'variant_unifier.py', 'sorted_fr.vcf', 'unified_fr.vcf', '1']).wait()
-	subprocess.Popen([python, 'variant_unifier.py', 'unified_fr.vcf', 'unified_fr2.vcf', '0']).wait()      #unifying the relocated variants 
-	with open ('filtered_fr.vcf', 'w') as filtered_fr_file:		#file object to write on the file	
-		subprocess.Popen(['vcffilter', '-f', 'AO > 1 & AO / DP > 0.005', 'unified_fr2.vcf'], stdout=filtered_fr_file, stderr=subprocess.PIPE).wait()	#filtering the variants
-	subprocess.Popen([python, 'data_updater.py', 'filtered.vcf', 'filtered_fr.vcf', vcf_outfile])   #updating the data
+	sorted_fr_vcf = temp_dir + '/sorted_fr.vcf'
+	with open (sorted_fr_vcf, 'w') as sortedfile:                      #file object to write on the file
+		subprocess.Popen(['bcftools', 'sort', relocated_fr_vcf], stdout=sortedfile, stderr=subprocess.PIPE).wait()
+	unified_dec_vcf = temp_dir + '/unified_dec.vcf'
+	unify_variants(sorted_fr_vcf, unified_dec_vcf, 1)	#unify decomposed variants
+	unified_rel_vcf = temp_dir + '/unified_rel.vcf'
+	unify_variants(unified_dec_vcf, unified_rel_vcf, 0)	#unifying the relocated variants
+	filtered_fr_vcf = temp_dir + '/filtered_fr.vcf'
+	with open (filtered_fr_vcf, 'w') as filtered_fr_file:		#file object to write on the file	
+		subprocess.Popen(['vcffilter', '-f', 'AO > 1 & AO / DP > 0.005', unified_rel_vcf], stdout=filtered_fr_file, stderr=subprocess.PIPE).wait()	#filtering the variants
+	update_data(filtered_vcf, filtered_fr_vcf, vcf_outfile)			#updating the data
 
 ##function to parse vcf file
-def parser_vcf_file():
+def parser_vcf_file(filtered_vcf):
 	info = []
-	with open('filtered.vcf', 'r') as file_handle:	#open vcf file for reading
+	with open(filtered_vcf, 'r') as file_handle:	#open vcf file for reading
 		for line in file_handle:
 			if line.startswith('#'):
 				continue
@@ -70,7 +81,8 @@ def parser_vcf_file():
 
 #main function
 def main():
-	info = parser_vcf_file()
+	filtered_vcf = temp_dir + '/filtered.vcf'
+	info = parser_vcf_file(filtered_vcf)
 	info_size = len(info)			#size of information array
 	AO = []					#array to store number of reads representing alternate allele
 	for i in range(2, info_size, 4):  	#loop to search AO field in info
@@ -108,11 +120,12 @@ def main():
 		char_list += '-'
 		char_list += str(chrom_pos[i+1])  #this is upper bound of locus
 		chrom_rng.append(char_list)				#storing in the array of chromosome positions
-	freq_retriever(chrom_rng)	#retrieving the variant frequencies
+	freq_retriever(chrom_rng, filtered_vcf)	#retrieving the variant frequencies
 			
 if __name__ == "__main__":
 	python = 'python'+str(sys.version_info.major)   #python version
-	shoulder_size = int(sys.argv[1])	#shoulder size in fasta and bam file
-	rDNA_unit_size = int(sys.argv[2])	#size of rDNA unit
-	vcf_outfile = sys.argv[3]		#output vcf file
+	temp_dir = sys.argv[1]			#temporary directory
+	shoulder_size = int(sys.argv[2])	#shoulder size in fasta and bam file
+	rDNA_unit_size = int(sys.argv[3])	#size of rDNA unit
+	vcf_outfile = sys.argv[4]		#output vcf file
 	main()

@@ -16,31 +16,10 @@ def slideFunct(data, window, step):
 		result.append(np.mean(data[spots[i]:spots[i]+window]))
 	return(result)
 
-#parameter file parser
-def parser_prm(REF):
-	info = []
-	with open(REF, 'r') as file_handle:                     #open parameter file for reading
-		for line in file_handle:                        #loop of the lines in the config file
-			read = False
-			char_list = ''
-			if (not line.startswith('#') and not len(line) < 2):
-				if (line[len(line)-1] == "\n"):
-					line_len = len(line) - 1
-				else:
-					line_len = len(line)
-				for index in range(line_len):          #loop to parse each lin
-					if (line[index] == '='):
-						read = True
-					elif (read):
-						if (not line[index].isspace()):
-							char_list += line[index]        #add value to the character list
-				info.append(char_list)
-	return info
-
 #depth file parser
-def parser_dfile(REF):
+def parser_dfile(depth_file):
 	info = []
-	with open(REF, 'r') as file_handle:                     #open reference fasta file for reading
+	with open(depth_file, 'r') as file_handle:                     #open reference fasta file for reading
 		for line in file_handle:                        #loop of the lines in the config file
 			col = 0
 			char_list = ''
@@ -56,8 +35,8 @@ def parser_dfile(REF):
 	return info
 
 ##examine the read depth across the whole of Chromosome XII
-def examine_whole_chromosome(REF, rdnastart, rdnaend, bufer, window, step):
-	wgsdata12 = parser_dfile(REF)		#parsing the depth file
+def examine_whole_chromosome(whole_genome_depth, rdnastart, rdnaend, bufer, window, step):
+	wgsdata12 = parser_dfile(whole_genome_depth)		#parsing the depth file
 	wgsdata12 = np.array(wgsdata12).astype(np.int)
 	startdata12 = []
 	for j in range(rdnastart-bufer):
@@ -75,8 +54,8 @@ def examine_whole_chromosome(REF, rdnastart, rdnaend, bufer, window, step):
 	return intercept
 
 #examine the read depth across the rDNA single unit, forcing the regression line to be horizontal
-def examine_rdna_unit(REF, bufer, window, step):
-	rdnadata = parser_dfile(REF)
+def examine_rdna_unit(rDNA_depth, bufer, window, step):
+	rdnadata = parser_dfile(rDNA_depth)
 	rdnadata = np.array(rdnadata).astype(np.int)
 	for j in range(bufer):
 		rdnadata[len(rdnadata)-2*bufer+j] += rdnadata[j]              #adding right shoulder
@@ -88,22 +67,10 @@ def examine_rdna_unit(REF, bufer, window, step):
 	return sw12
 
 #main function
-def main():
+def examine(whole_genome_depth, rdnastart, rdnaend, buffer1, rDNA_depth, buffer2, window, step):
 	#examine the read depth across the whole of Chromosome XII
-	intercept = examine_whole_chromosome(whole_genome_depth_profile, rdnastart, rdnaend, buffer1, window, step)
+	intercept = examine_whole_chromosome(whole_genome_depth, rdnastart, rdnaend, buffer1, window, step)
 	#examine the read depth across the rDNA single unit, forcing the regression line to be horizontal
-	sw12 = examine_rdna_unit(rDNA_depth_profile, buffer2, window, step)
-	copyno = int(round(np.mean(sw12)/intercept))
-	print(copyno)
-
-if __name__ == "__main__":
-	whole_genome_depth_profile = sys.argv[1]	#whole genome depth profile text file
-	rdnastart = int(sys.argv[2])				#rDNA start locus in whole genome
-	rdnaend =  int(sys.argv[3])				#rDNA end locus in whole genome
-	buffer1 = int(sys.argv[4])				#buffer between rDNA and non rDNA region
-	rDNA_depth_profile = sys.argv[5]		#depth profile of rDNA region only
-	buffer2 = int(sys.argv[6])				#its equal to shoulder size
-	window = int(sys.argv[7])				#window size
-	step = int(sys.argv[8])				#step size
-	main()
+	sw12 = examine_rdna_unit(rDNA_depth, buffer2, window, step)
+	return int(round(np.mean(sw12)/intercept))
 

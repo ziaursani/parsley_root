@@ -10,7 +10,8 @@ import numpy as np
 #function to parse the fasta file
 def parser():
 	DNA_seq = ''
-	with open('ref_trm.fasta', 'r') as file_handle:			#open reference fasta file for reading
+	trim_ref = temp_dir + '/trim.fasta'
+	with open(trim_ref, 'r') as file_handle:			#open reference fasta file for reading
 		for line in file_handle:			#loop of the lines in the ref file
 			if line.startswith('>'):		#condition to identify first line of fasta
 				lineseg1 = ''
@@ -366,6 +367,26 @@ def variant_generator(DNA_seq, lineseg1, lineseg2, LB_for_homo_zone, UB_for_homo
                 i += 1
 	file_writing(DNA_seq, lineseg1, lineseg2, SNP_list, SNP_coord, SNP_frq, DEL_coord, DEL_size, DEL_frq, INS_list, INS_coord, INS_frq)       #file writing
 
+#function to exit with error message
+def exit_program(error_message):
+        print(error_message)
+        sys.exit(2)
+
+#function to verify input
+def input_check(arg_name, arg_value, Type):
+        if Type == 'int':
+                if not arg_value.isdigit():
+                        exit_program('Error2: Not a number: '+arg_name)
+        elif Type == 'float':
+                if not arg_value.replace('.','',1).isdigit():
+                        exit_program('Error3: Not numeric: '+arg_name)
+                if float(arg_value) < 0.0 or float(arg_value) > 1.0:
+                        exit_program('Error4: Out of range: '+arg_name)
+        elif Type == 'str':
+                if not path.exists(arg_value):
+                        exit_program('Error5: Does not exist: '+arg_name)
+        return arg_value
+
 #main function
 def main():
 	(DNA_seq, lineseg1, lineseg2) = parser()    #parsing the reference genome file
@@ -374,46 +395,48 @@ def main():
 	Largest_homo_size = max(max_homo_size, largest_homo_size + 1)			#largest allowable homopolymer size in this program
 	variant_generator(DNA_seq, lineseg1, lineseg2, LB_for_homo_zone, UB_for_homo_zone, nr_of_homo_zones, Largest_homo_size)
 
-class take_command_line_args():
-	def __init__(self, info):
-		global nr_of_copies, nr_of_noncoding_reg, LB_for_noncoding_reg, UB_for_noncoding_reg, NB, nr_of_var, min_del_size, max_del_size, min_ins_size, max_ins_size, min_homo_size, max_homo_size, part_var_freq_range, cum_prob_SNP, cum_prob_part_SNP, cum_prob_DEL, cum_prob_part_DEL, cum_prob_INS, cum_prob_INS, prob_of_var_in_noncoding_zone, prob_homo_indel, alpha, beta, VCF
-		nr_of_copies = int(info[0])                     #copy numbers or number of repeats of rDNA array
-		nr_of_noncoding_reg = int(info[1])                               #number of non-coding regions
-		LB_for_noncoding_reg = []                                                #lower bounds of non-coding regios
-		for i in range(2, 2 + nr_of_noncoding_reg):                     #lower bound array
-			LB_for_noncoding_reg.append(int(info[i]))                 #add lower bound	
-		UB_for_noncoding_reg = []                                         #upper bounds of non-coding regios
-		NB = 2*nr_of_noncoding_reg                                       #total number of bounds (upper & lower)
-		for i in range(2 + nr_of_noncoding_reg, 2 + NB):                        #upper bound array
-			UB_for_noncoding_reg.append(int(info[i]))                 #add upper bound
-		nr_of_var = int(info[2 + NB])                          #total number of variants
-		min_del_size = int(info[3 + NB])                    #lower bound on deletion size
-		max_del_size = int(info[4 + NB])                    #upper bound on deletion size
-		min_ins_size = int(info[5 + NB])                    #lower bound on insertion size
-		max_ins_size = int(info[6 + NB])                    #upper bound on insertion size
-		min_homo_size = int(info[7 + NB])                       #lower bound on homopolymer size
-		max_homo_size = int(info[8 + NB])                    #upper bound on homopolymer size
-		part_var_freq_range = []                                       #partial variation frequency range
-		part_var_freq_range.append(int(info[9 + NB]))                  #lower bound on partial variation frequency range
-		part_var_freq_range.append(int(info[10 + NB]))                 #upper bound on partial variation frequency range
-		cum_prob_SNP = float(info[11 + NB])                     #commulative probability of SNP
-		cum_prob_part_SNP = cum_prob_SNP + float(info[12 + NB])             #commulative probability of pSNP
-		cum_prob_DEL = cum_prob_part_SNP + float(info[13 + NB])             #commulative probability of deletion
-		cum_prob_part_DEL =  cum_prob_DEL + float(info[14 + NB])             #commulative probability of partial deletion
-		cum_prob_INS = cum_prob_part_DEL + float(info[15 + NB])             #commulative probability of insertion
-		cum_prob_part_INS = cum_prob_INS +  float(info[16 + NB])            #commulative probability of  partial insertion
-		prob_of_var_in_noncoding_zone = float(info[17 + NB])                    #probability of variation in non-coding zone
-		prob_homo_indel = float(info[18 + NB])                #probability of homopolymeric indels
-		alpha = float(info[19 + NB])                    #parameter of beta distribution
-		beta = float(info[20 + NB])                     #parameter of beta distribution
-		VCF =  info[24 + NB]                            #file writing
+class generate_variants():
+	def __init__(self, info, tmp_dir):
+		global nr_of_copies, nr_of_noncoding_reg, LB_for_noncoding_reg, UB_for_noncoding_reg, NB, nr_of_var, min_del_size, max_del_size, min_ins_size, max_ins_size, min_homo_size, max_homo_size, part_var_freq_range, cum_prob_SNP, cum_prob_part_SNP, cum_prob_DEL, cum_prob_part_DEL, cum_prob_INS, cum_prob_INS, prob_of_var_in_noncoding_zone, prob_homo_indel, alpha, beta, VCF, temp_dir
+		temp_dir = tmp_dir
+		rDNA_structure = info['rDNA structure']
+		nr_of_copies = int(input_check('Number of rDNA unit repeats', rDNA_structure['Number of rDNA unit repeats'], 'int'))	#copy numbers or number of repeats of rDNA array
+		nr_of_noncoding_reg = int(input_check('Number of non coding zones', rDNA_structure['Number of regions for non-coding zones'], 'int'))
+		LB_for_noncoding_reg = np.array(input_check('Lower bound', rDNA_structure['Lower bound for each region'].split("\t"), 'int*')).astype(np.int)
+		UB_for_noncoding_reg = np.array(input_check('Upper bound', rDNA_structure['Upper bound for each region'].split("\t"), 'int*')).astype(np.int)
+		variations = info['Variations']
+		nr_of_var = int(input_check('Number of variations', variations['Number of Variations'], 'int'))
+		del_size = np.array(input_check('Deletion Size', variations['Size range of deletion in nonhomopolymeric region'].split("\t"), 'int*')).astype(np.int)
+		min_del_size = del_size[0]                    #lower bound on deletion size
+		max_del_size = del_size[1]                    #upper bound on deletion size
+		ins_size = np.array(input_check('Insertion Size', variations['Size range of insertion in nonhomopolymeric region'].split("\t"), 'int*')).astype(np.int)
+		min_ins_size = ins_size[0]                    #lower bound on insertion size
+		max_ins_size = ins_size[1]                    #upper bound on insertion size
+		size_of_homopolymer = np.array(input_check('Homopolymer Size', variations['Size range of homopolymer'].split("\t"), 'int*')).astype(np.int)
+		min_homo_size = size_of_homopolymer[0]		#lower bound on homopolymer size
+		max_homo_size = size_of_homopolymer[1]		#upper bound on homopolymer size
+		part_var_freq_range = np.array(input_check('Partial Variation Frequency Range', variations['Partial Variation Frequency Range'].split("\t"), 'int*')).astype(np.int)
+		proportion_SNP = float(input_check('Proportion of SNPs', variations['Proportion of SNPs'], 'float'))
+		cum_prob_SNP = proportion_SNP                     #commulative probability of SNP
+		proportion_pSNP = float(input_check('Proportion of pSNPs', variations['Proportion of pSNPs'], 'float'))
+		cum_prob_part_SNP = cum_prob_SNP + proportion_pSNP             #commulative probability of pSNP
+		proportion_DEL = float(input_check('Proportion of DELs', variations['Proportion of DELs'], 'float'))
+		cum_prob_DEL = cum_prob_part_SNP + proportion_DEL             #commulative probability of deletion
+		proportion_pDEL = float(input_check('Proportion of pDELs', variations['Proportion of pDELs'], 'float'))
+		cum_prob_part_DEL =  cum_prob_DEL + proportion_pDEL             #commulative probability of partial deletion
+		proportion_INS = float(input_check('Proportion of INSs', variations['Proportion of INSs'], 'float'))
+		cum_prob_INS = cum_prob_part_DEL + proportion_INS             #commulative probability of insertion
+		proportion_pINS = float(input_check('Proportion of pINSs', variations['Proportion of pINSs'], 'float'))
+		cum_prob_part_INS = cum_prob_INS +  proportion_pINS            #commulative probability of  partial insertion
+		prob_of_var_in_noncoding_zone = float(input_check('Proportion of variation in noncoding zone', variations['Proportion of variation in noncoding zone'], 'float'))
+		prob_homo_indel = float(input_check('Proportion of indel in homopolymeric region', variations['Proportion of deletion & insertion in homopolymeric region'], 'float'))
+		beta_dist_params = info['Parameters for partial variation beta distributions']
+		alpha = float(input_check('Beta Distribution Parameter Alpha', beta_dist_params['Alpha'], 'float'))
+		beta = float(input_check('Beta Distribution Parameter Beta', beta_dist_params['Beta'], 'float'))
+		output_files = info['Output simulated vcf and genome files']
+		VCF = output_files['Name and address of output simulated vcf file']
 	def execute(self):
 		main()
 	
 
-if __name__ == "__main__":
-	info = sys.argv[1].split(', ')		#split string into list of elements
-	info[0] = info[0].replace('[','',1)	#remove bracket from first character
-	info[len(info)-6] = info[len(info)-6].replace('\'','',1)	#remove open quote from character
-	info[len(info)-6] = info[len(info)-6].replace('\'','',1)	#remove close quote from character
-	take_command_line_args(info).execute()
+

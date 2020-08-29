@@ -1,73 +1,66 @@
-import sys, os, subprocess
+import sys, os, subprocess, configparser, random
 from os import path
+from fasta_trimmer import trim_fasta
+from genome_generator import generate_genome
+from variant_simulator import generate_variants
 
-#function to parse configuration file
-def parser():
-	info = []
-	with open(config, 'r') as file_handle:                  #open vcf file for reading
-		for line in file_handle:
-			if line.startswith('#'):
-				continue
-			read = False
-			char_list = ''                  #initialising character list for reading
-			for index in range(len(line)):                  #loop to parse each lin
-				if line[index] == ':':
-                                        read = True                     #parser can read
-				elif line[index].isspace():             #if parser encounter space
-					if len(char_list) > 0:
-						if(char_list.isdigit()):			#if all characters in string are digits
-							char_list = int(char_list)
-						elif(char_list.replace('.','',1).isdigit()):	#if the string represents a floating point number
-							char_list = float(char_list)
-						info.append(char_list)                  #inserting value in info array
-					char_list = ''                  #initialising character list for reading
-					continue
-				elif read:
-                                        char_list += line[index]        #add character to the character list
-	return info
+#change files to linux format
+def change_to_linux_format(infile, outfile):
+        with open(outfile, 'w') as outf:
+                with open(infile, 'r') as inf:
+                        for line in inf:
+                                line.replace('\r\n', '\n')
+                                outf.write(line)
 
+#function to exit with error message
+def exit_program(error_message):
+        print(error_message)
+        sys.exit(2)
 
-def variant_generator(info):
-	nr_of_repeats = info[0]		#number of rDNA repeats
-	if not str(nr_of_repeats).isdigit():
-		print('Error0: Number of rDNA repeats must be a number.')
-		sys.exit(2)
-	nr_of_noncoding_reg = info[1]	#number of non coding regions
-	if not str(nr_of_noncoding_reg).isdigit():
-		print('Error1: Number of non coding zones must be a number.')
-		sys.exit(2)
-	ref_file_idx = 21 + 2*nr_of_noncoding_reg	#index of reference file
-	ref_file = info[ref_file_idx]		#name and address of reference file
-	if not path.exists(ref_file):
-		print('Error2: Cannot find reference file.')
-		sys.exit(2)
-	first_coordinate = info[ref_file_idx+1]	#first coordinate of rDNA unit
-	if not str(first_coordinate).isdigit():
-		print('Error3: First coordinate of rDNA unit must be a number.')
-		sys.exit(2)
-	last_coordinate = info[ref_file_idx+2]	#last_coordinate of rDNA unit
-	if not str(last_coordinate).isdigit():
-		print('Error4: Last coordinate of rDNA unit must be a number.')
-		sys.exit(2)
-	simulated_vcf_file = info[ref_file_idx+3]	#simulated vcf file
-	simulated_rDNA_file = info[ref_file_idx+4]	#simulated rDNA file
-	length_of_line = info[ref_file_idx+5]		#length of line of simulated rDNA fasta file
-	if not str(length_of_line).isdigit():
-		print('Error5: Length of line must be a number.')
-		sys.exit(2)
-	read_depth = info[ref_file_idx+6]		#coverage
-	snp_error_rate = info[ref_file_idx+7]         #error rate of snps
-	read_file_prefix = info[ref_file_idx+8]         #error rate of snps
-	#bringing reference file ti linux standard
-	process_cat = subprocess.Popen(['cat', ref_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE) 
-	with open ('fixed.fasta', 'w') as fixedfile:
-		subprocess.Popen(['tr', '-d', '\'\\r\''], stdin=process_cat.stdout, stdout=fixedfile, stderr=subprocess.PIPE).wait()
+#function to verify input
+def input_check(arg_name, arg_value, Type):
+        if Type == 'int':
+                if not arg_value.isdigit():
+                        exit_program('Error2: Not a number: '+arg_name)
+        elif Type == 'float':
+                if not arg_value.replace('.','',1).isdigit():
+                        exit_program('Error3: Not numeric: '+arg_name)
+                if float(arg_value) < 0.0 or float(arg_value) > 1.0:
+                        exit_program('Error4: Out of range: '+arg_name)
+        elif Type == 'str':
+                if not path.exists(arg_value):
+                        exit_program('Error5: Does not exist: '+arg_name)
+        return arg_value
+
+def reads_generator(info):
+	rDNA_structure = info['rDNA structure']
+	nr_of_repeats = input_check('Number of rDNA unit repeats', rDNA_structure['Number of rDNA unit repeats'], 'int')
+	input_reference_file = info['Input reference file']
+	ref_file = input_check('Name and address of input reference fasta file', input_reference_file['Name and address of input reference fasta file'], 'str')
+	first_coordinate = input_check('First Coordinate of rDNA unit', input_reference_file['First Coordinate of rDNA unit'], 'int')
+	last_coordinate = input_check('Last Coordinate of rDNA unit', input_reference_file['Last Coordinate of rDNA unit'], 'int')
+	output_svcf_genome_files = info['Output simulated vcf and genome files']
+	simulated_vcf_file = output_svcf_genome_files['Name and address of output simulated vcf file']
+	simulated_rDNA_file = output_svcf_genome_files['Name and address of output simulated rDNA fasta file']
+	length_of_line = input_check('Length of line of rDNA file', output_svcf_genome_files['Length of line of rDNA file'], 'int')
+	Output_read_files = info['Output read files']
+	read_depth = input_check('Read Depth', Output_read_files['Read Depth'], 'int')
+	snp_error_rate = input_check('SNP Error Rate', Output_read_files['SNP Error Rate'], 'float')
+	read_file_prefix = Output_read_files['Read Filename Prefix']
+	#create temporary directory
+	temp_dir = 'temp'+str(random.randint(10000, 100000))
+	subprocess.Popen(['mkdir', temp_dir], stderr=subprocess.PIPE)   #creating the temporRY DIRECTORY
+	subprocess.Popen(['cd', temp_dir], stderr=subprocess.PIPE)      #accessing the directory first before writing file in it to avoid error
+	#change file to linux format
+	linux_ref = temp_dir + '/linux.fasta'
+	change_to_linux_format(ref_file, linux_ref)
         #trim reference file
-	subprocess.Popen([python, 'fasta_trimmer.py', 'fixed.fasta', 'ref_trm.fasta', '{0}'.format(first_coordinate), '{0}'.format(last_coordinate)]).wait()
+	trim_ref = temp_dir + '/trim.fasta'
+	trim_fasta(linux_ref, trim_ref, int('{0}'.format(first_coordinate)), int('{0}'.format(last_coordinate)))
 	#generating the simulated vcf
-	subprocess.Popen([python, 'variant_simulator.py', '{0}'.format(info)]).wait()
+	generate_variants(info, temp_dir).execute()
 	#generating the simulated rDNA
-	subprocess.Popen([python, 'genome_generator.py', 'ref_trm.fasta', '{0}'.format(simulated_vcf_file), '{0}'.format(simulated_rDNA_file), '{0}'.format(nr_of_repeats), '{0}'.format(length_of_line)]).wait()
+	generate_genome(temp_dir, '{0}'.format(simulated_vcf_file), '{0}'.format(simulated_rDNA_file), int('{0}'.format(nr_of_repeats)), int('{0}'.format(length_of_line)))
 	#activating the pIRS
 	command = "export LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH}"
 	subprocess.Popen([command], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -76,19 +69,12 @@ def variant_generator(info):
 	try:
 		subprocess.Popen(['pirs', 'simulate', '{0}'.format(simulated_rDNA_file), '-x', '{0}'.format(read_depth), '-e', '{0}'.format(snp_error_rate), '-o', '{0}'.format(read_file_prefix)], stdout=devnull, stderr=devnull)
 	except OSError:
-		print('Error6: Cannot find pirs.')
-		sys.exit(2)
+		exit_program('Error9: Cannot find: pirs.')
+	subprocess.Popen(['rm', '-rf', temp_dir], stderr=subprocess.STDOUT)	
 	
 #main function
-def main():
-	info = parser()
-	variant_generator(info)
-
-if __name__ == "__main__":
-	python = 'python'+str(sys.version_info.major)
-	config = sys.argv[1]                 #input reference file
-	if not path.exists(config):
-		print('Error0: Cannot find input file')
-		sys.exit(2)
-	main()
-
+def simulate_variants(config):
+	config = input_check('configuration file', config, 'str')
+	info = configparser.ConfigParser()
+	info.read(config)
+	reads_generator(info)

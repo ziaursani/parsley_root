@@ -2,17 +2,17 @@
 import sys
 
 #function to trim fasta file
-def trim_fasta():
+def trim_fasta(orgFasta, trmFasta, locus_beg, locus_end):
 	info = []
-	(lenLine, numLines_beg, numLines_end, rem_beg, rem_end) = parameters()	#computing parameter
+	(lenLine, numLines_beg, numLines_end, rem_beg, rem_end) = parameters(orgFasta, locus_beg, locus_end)	#computing parameter
 	with open(orgFasta, 'r') as file_handle1:          		    #open original fasta file for reading
 		with open(trmFasta, 'w') as file_handle2:      		    #open trimmed fasta file for writing
 			count_lines = 0                                     #counting lines in original file
-			count_seq = 0                                       #count sequence number of locus within line                                 
+			count_seq = 0                                       #count sequence number of locus within line
 			lineseg = ''                                        #initializing the line segment of trimmed fasta file
 			for line in file_handle1:                           #loop of the lines in the original file
 				if line.startswith('>'):                    #condition to identify first line of fasta
-					(lineseg1, lineseg2, locus_nr_init_trm, locus_nr_fnl_trm) = compute_coordinates(line)	#computing coordinates of the trimmed fasta
+					(lineseg1, lineseg2, locus_nr_init_trm, locus_nr_fnl_trm) = compute_coordinates(line, locus_beg, locus_end)	#computing coordinates of the trimmed fasta
 					file_handle2.write(lineseg1 + ':' + str(locus_nr_init_trm) + '..' + str(locus_nr_fnl_trm) + lineseg2 + '\n')	#writing line containing coordinates to trimmed fasta file
 					info.append(lineseg1 + ':' + str(locus_nr_init_trm) + '..' + str(locus_nr_fnl_trm) + lineseg2 + '\n')	#for file stream
 				else:
@@ -39,7 +39,7 @@ def trim_fasta():
 	return info
 
 #function to compute coordinates of the trimmed fasta file
-def compute_coordinates(line):
+def compute_coordinates(line, locus_beg, locus_end):
 	lineseg1 = ''
 	for index1 in range(0, len(line) - 1):      #loop to see from where initial locus number starts
         	if line[index1] == ':':
@@ -62,7 +62,7 @@ def compute_coordinates(line):
 	return (lineseg1, lineseg2, locus_nr_init_trm, locus_nr_fnl_trm)
 
 #function to compute parameters of the DNA sequence
-def parameters():
+def parameters(orgFasta, locus_beg, locus_end):
 	with open(orgFasta, 'r') as file_handle1:      #open original fasta file for reading
 		lenLine = lengthOfLine(file_handle1)       #length of a line in an original fasta file
 		numLines_beg = int(locus_beg/lenLine) + 1  #line number in original file where beginner locus of trimmed file exists
@@ -81,7 +81,7 @@ def parameters():
 #function to write DNA sequence in a trimmed file
 def file_writing(file_handle2, line, lineseg, locus, count_seq, lenLine, info):
 	lineseg += line[locus]                              #adding DNA locus to line segment
-	count_seq += 1                                      #incrementing sequence number counter of the line segment 
+	count_seq += 1                                      #incrementing sequence number counter of the line segment
 	if(count_seq == lenLine):                           #if counter achieves the full length of line
 		file_handle2.write(lineseg+'\n')                #write on the trimmed file
 		info.append(lineseg+'\n')			#for file stream
@@ -96,12 +96,3 @@ def lengthOfLine(file_handle1):
 			continue
 		return len(line) - 1
 
-def main():
-	trim_fasta()
-  
-if __name__ == "__main__":
-	locus_beg = int(sys.argv[3])	#begining locus
-	locus_end = int(sys.argv[4])	#end locus
-	orgFasta = sys.argv[1]		#original fasta/reference sequence file
-	trmFasta = sys.argv[2]		#trimed fasta/output file
-	main()
