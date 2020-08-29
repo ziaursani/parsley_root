@@ -4,7 +4,7 @@ import sys
 from  math import log10
 
 #function to unify variants in vcf file
-def unify_variants():
+def unify_variants(orgVCF, uniVCF, dec_var):
 	with open(orgVCF, 'r') as file_handle1:                                          #open vcf file for reading
 		with open(uniVCF, 'w') as file_handle2:                                      #open vcf file for writing
 			first_line = True				#first line to start
@@ -157,11 +157,3 @@ def extract_info(line):
 		lineseg7 += line[index2]
 	return (lineseg1, pos, lineseg2, ref, alt, float(qlt), lineseg3, int(ao), lineseg4, int(dp), lineseg5, int(ro), lineseg6, lineseg7)
 
-def main():
-	unify_variants()
-
-if __name__ == "__main__":
-	orgVCF = sys.argv[1]		#original/input vcf
-	uniVCF = sys.argv[2]		##unified/output vcf
-	dec_var = int(sys.argv[3])	#decision variable to decide whether to unify relocated variants or decomposed variants
-	main()

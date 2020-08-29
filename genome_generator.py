@@ -4,9 +4,10 @@ import sys
 from random import randint
 
 #function to parse the fasta file
-def parser_REF(REF):
+def parser_REF(temp_dir, CN):
 	DNA_seq = []
-	with open(REF, 'r') as file_handle:                     #open reference fasta file for reading
+	trim_ref = temp_dir + '/trim.fasta'
+	with open(trim_ref, 'r') as file_handle:                     #open reference fasta file for reading
 		for line in file_handle:                       #loop of the lines in the ref fasta file
 			if line.startswith('>'):                        #condition to identify first line of fasta
 				lineseg1 = ''
@@ -172,20 +173,12 @@ def file_writing(GEN, DNA_seq, lineseg1, lineseg2, NBL):
 			file_handle.write(DNA_seq[index])     
                 
 #main function
-def main():
-	(GS, DNA_seq, lineseg1, lineseg2) = parser_REF(REF)	#function to parse reference sequence
+def generate_genome(temp_dir, VCF, GEN, CN, NBL):
+	(GS, DNA_seq, lineseg1, lineseg2) = parser_REF(temp_dir, CN)	#function to parse reference sequence
 	(coordinate, CNV, REF_list, ALT_list) = parser_VCF(VCF, lineseg1)		#function to parse VCF file
 	CNV_array = assigning_rDNA_units(CN, GS, coordinate, CNV, REF_list, ALT_list)	#function to assign rDNA units to variants
 	(coord_glob, ref_list_exp, alt_list_exp) = vcf_expander(CN, GS, coordinate, CNV_array, REF_list, ALT_list)	#function to expand vcf to all rDNA repeats
 	DNA_seq = strain_DNA_generator(DNA_seq, coord_glob, ref_list_exp, alt_list_exp)	#function to generate whole DNA (all repeats) of chromosome of the variant strain
 	file_writing(GEN, DNA_seq, lineseg1, lineseg2, NBL)
 
-
-if __name__ == "__main__":
-	REF = sys.argv[1]               #input reference file
-	VCF = sys.argv[2]               #iutput vcf file
-	GEN = sys.argv[3]        	#output genome file
-	CN = int(sys.argv[4])           #copy numbers
-	NBL = int(sys.argv[5])		#number of bases in one line
-	main()
 

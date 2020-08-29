@@ -3,7 +3,7 @@
 import sys
 
 #function to unify variants in vcf file
-def update_data():
+def update_data(orgVCF, corVCF, outVCF):
 	with open(outVCF, 'w') as writing_file:				#open file for writing
 		with open(orgVCF, 'r') as original_file:			#open file for reading
 			for line in original_file:
@@ -11,14 +11,14 @@ def update_data():
 					writing_file.write(line)
 					continue
 				(lineseg_org1, pos_org, lineseg_org2, ref_org, alt_org, qlt_org, lineseg_org3, ao_org, lineseg_org4, dp_org, lineseg_org5, ro_org, lineseg_org6, lineseg_org7, lineseg_org8) = extract_info(line)
-				(success, lineseg_cor1, pos_cor, lineseg_cor2, ref_cor, alt_cor, qlt_cor, lineseg_cor3, ao_cor, lineseg_cor4, dp_cor, lineseg_cor5, ro_cor, lineseg_cor6, lineseg_cor7, lineseg_cor8) = match(pos_org, ref_org, alt_org)
+				(success, lineseg_cor1, pos_cor, lineseg_cor2, ref_cor, alt_cor, qlt_cor, lineseg_cor3, ao_cor, lineseg_cor4, dp_cor, lineseg_cor5, ro_cor, lineseg_cor6, lineseg_cor7, lineseg_cor8) = match(pos_org, ref_org, alt_org, corVCF)
 				if success:
 					writing_file.write(lineseg_cor1 + pos_cor + lineseg_cor2 + ref_cor + '\t' + alt_cor + '\t' + str(qlt_cor) + '\t' + lineseg_cor3 + str(ao_cor) + lineseg_cor4 + str(dp_cor) + ';DPB=' + str(dp_cor) + lineseg_cor5 + str(ro_cor) + lineseg_cor6 + str(dp_cor) + ':' + str(dp_cor) + ',' + str(ao_cor) + ':' + str(ro_cor) + ':' + lineseg_cor7 + str(ao_cor) + lineseg_cor8 + '\n')
 				else:
 					writing_file.write(line)
 
 #to match variants
-def match(pos_org, ref_org, alt_org):
+def match(pos_org, ref_org, alt_org, corVCF):
 	success = False
 	with open(corVCF, 'r') as corrected_file:        #open file for reading
 		for line in corrected_file:
@@ -125,12 +125,4 @@ def extract_info(line):
 		lineseg8 += line[index1]
 	return (lineseg1, pos, lineseg2, ref, alt, float(qlt), lineseg3, int(ao), lineseg4, int(dp), lineseg5, int(ro), lineseg6, lineseg7, lineseg8)
 
-def main():
-        update_data()
-
-if __name__ == "__main__":
-	orgVCF = sys.argv[1]		#original/input vcf
-	corVCF = sys.argv[2]		#vcf with corrected frequencies
-	outVCF =  sys.argv[3]		#output vcf
-	main()
 
