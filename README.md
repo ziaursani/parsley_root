@@ -11,7 +11,7 @@ Create link
 chmod +x parsley.py
 ln -s parsley.py parsley
 Type ./parsley --help
-or follow instructions below
+or follow instructions below:
 These commands are mutually exclusive
         discover_variants       Discovers variants in strain against reference sequence.
         simulate_variants       Simulates variant strains from reference sequence.
