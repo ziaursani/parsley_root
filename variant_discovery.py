@@ -1,9 +1,10 @@
-import getopt, sys
+import getopt, sys, os
 import subprocess, random
 from os import path
 from itertools import islice
 from fasta_trimmer import trim_fasta
 from variant_unifier import unify_variants
+from data_updater import update_data
 
 #function to exit with error message
 def exit_program(error_message):
@@ -72,18 +73,25 @@ def variant_discoverer(first_coordinate, last_coordinate, max_read_len, rDNA_uni
 	except OSError:
 		exit_program('Error9: Cannot find samtools.')
 	#Map the reads with bwa
-	process_align_reads = subprocess.Popen(['bwa', 'mem', trim_ref,  fwd_reads_file,  rvs_reads_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	devnull0 = open(os.devnull, 'w')
+	align_reads_sam =  temp_dir + '/align_reads.sam'
+	with open (align_reads_sam, 'w') as ar_sam:
+		subprocess.Popen(['bwa', 'mem', trim_ref,  fwd_reads_file,  rvs_reads_file], stdout=ar_sam, stderr=devnull0).wait()
 	#filter unmapped reads with samtools
-	process_filter_unmapped_reads = subprocess.Popen(['samtools', 'view', '-h', '-F', '4'], stdin=process_align_reads.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	filter_unmapped_sam =  temp_dir + '/filter_unmapped.sam'
+	with open (filter_unmapped_sam, 'w') as fu_sam:
+		subprocess.Popen(['samtools', 'view', '-h', '-F', '4', align_reads_sam], stdout=fu_sam, stderr=subprocess.PIPE).wait()
 	#filter reads with soft clippings with software available at https://github.com/tseemann/samclip
-	try:
-		process_filter_softclipped_reads = subprocess.Popen(['samclip', '--ref', trim_ref, '--max', '0'], stdin=process_filter_unmapped_reads.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	except OSError:
-		exit_program('Error9: Cannot find samclip.')
+	filter_softclipped_sam =  temp_dir + '/filter_softclipped.sam'
+	with open (filter_softclipped_sam, 'w') as fs_sam:
+		try:
+			subprocess.Popen(['samclip', '--ref', trim_ref, '--max', '0', filter_unmapped_sam], stdout=fs_sam, stderr=subprocess.PIPE).wait()
+		except OSError:
+			exit_program('Error9: Cannot find samclip.')
 	#Convert file to BAM format for the next tool
 	bamfile = temp_dir + '/bamfile.bam'
 	with open (bamfile, 'w') as bam:
-		subprocess.Popen(['samtools', 'view', '-bS'], stdin=process_filter_softclipped_reads.stdout, stdout=bam, stderr=subprocess.PIPE).wait()
+		subprocess.Popen(['samtools', 'view', '-bS', filter_softclipped_sam], stdout=bam, stderr=subprocess.PIPE).wait()
 	#Use Prithika's new Python tool to convert CIGAR strings to CIGAR2 strings software available from Prithika
 	fat_cigar_bam = temp_dir + '/fat_cigar.bam'
 	subprocess.Popen([python, 'fat-cigar.py', 'linear', bamfile, fat_cigar_bam], stderr=subprocess.PIPE).wait()
@@ -115,41 +123,67 @@ def variant_discoverer(first_coordinate, last_coordinate, max_read_len, rDNA_uni
 			subprocess.Popen(['freebayes', '-f', trim_ref, '-F', '0.001', '--pooled-continuous', back_to_bam], stdout=vcfile, stderr=subprocess.PIPE).wait()
 		except OSError:
 			exit_program('Error9: Cannot find freebayes.')
-	#Break multi-allelic sites
-	try:
-		process_breakmulti = subprocess.Popen(['vcfbreakmulti', vcf_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	except OSError:
-		exit_program('Error9: Cannot find vcflib.')
-	#Decompose biallelic sites
-	process_allelicprimitives = subprocess.Popen(['vcfallelicprimitives', '-kg'], stdin=process_breakmulti.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	#Fix the field of alternate allelic depth
-	process_fix_depth = subprocess.Popen(['./vcf_ad_fix.sh'], stdin=process_allelicprimitives.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	#normalise the vcf
-	try:
-		process_normalise = subprocess.Popen(['bcftools', 'norm', '-f', trim_ref, '-m-'], stdin=process_fix_depth.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	except OSError:
-		exit_program('Error9: Cannot find bcftools.')
-	#relocate variants
-	relocated_vcf = temp_dir + '/relocated.vcf'
-	subprocess.Popen([python, 'variant_relocator.py', relocated_vcf, str(max_read_len), str(rDNA_unit_size+max_read_len-1), '0'], stdin=process_normalise.stdout, stderr=subprocess.PIPE).wait()
-	#sort variants
-	sorted_vcf =  temp_dir + '/sorted.vcf'
-	with open (sorted_vcf, 'w') as sortedfile:                      #file object to write on the file
-		subprocess.Popen(['bcftools', 'sort', relocated_vcf], stdout=sortedfile, stderr=subprocess.PIPE).wait()
-	#unify decomposed variants
-	unified_dec_vcf = temp_dir + '/unified_dec.vcf'
-	unify_variants(sorted_vcf, unified_dec_vcf, 1)
-	#unify relocated variants
-	unified_rel_vcf = temp_dir + '/unified_rel.vcf'
-	unify_variants(unified_dec_vcf, unified_rel_vcf, 0)
+	process_variants(temp_dir, trim_ref, max_read_len-1, rDNA_unit_size, '.vcf')
 	#filter variants
+	unified_rel_vcf = temp_dir + '/unified_rel.vcf'
 	filtered_vcf = temp_dir + '/filtered.vcf'
 	with open (filtered_vcf, 'w') as filteredfile:                #file object to write on the file
 		subprocess.Popen(['vcffilter', '-f', 'AO > 1 & AO / DP > 0.005', unified_rel_vcf], stdout=filteredfile, stderr=subprocess.PIPE).wait() #filtering the variants
 	#retrieve frquency
-	subprocess.Popen([python, 'frequency_retriever.py', temp_dir, str(max_read_len-1), str(rDNA_unit_size), out_vcf]).wait()
+	retrieve_freq(temp_dir)
+	process_variants(temp_dir, trim_ref, max_read_len-1, rDNA_unit_size, '_fr.vcf')
+	filtered_fr_vcf = temp_dir + '/vcfile_fr.vcf'
+	update_data(filtered_vcf, filtered_fr_vcf, out_vcf)                 #updating the data
 	subprocess.Popen(['rm', '-rf', temp_dir], stderr=subprocess.PIPE)
-	
+
+#function to retrieve frequencies
+def retrieve_freq(temp_dir):     #function to retrieve frequencies
+        bamfile = temp_dir + '/bamfile.bam'
+        sorted_bamfile = temp_dir + '/bamfile_sorted.bam'
+        subprocess.Popen(['samtools', 'sort', bamfile, '-o', sorted_bamfile]).wait()
+        subprocess.Popen(['samtools', 'index', sorted_bamfile]).wait()
+        vcfile_vcf = temp_dir + '/vcfile.vcf'
+        vcfile_vcf_gz = vcfile_vcf + '.gz'
+        try:
+                with open (vcfile_vcf_gz, 'w') as vcfgz:
+                        subprocess.Popen(['tabix-0.2.6/bgzip', '-c', vcfile_vcf], stdout=vcfgz, stderr=subprocess.PIPE).wait()  #zip the vcf
+        except OSError:
+                exit_program('Error9: Cannot find tabix.')
+        subprocess.Popen(['tabix-0.2.6/tabix', '-p', 'vcf', vcfile_vcf_gz], stderr=subprocess.PIPE).wait()     #index the zipped vcf
+        trim_ref = temp_dir + '/trim.fasta'
+        fr_retrieved = temp_dir + '/vcfile_fr.vcf'
+        with open (fr_retrieved, 'w') as vcfile:
+                subprocess.Popen(['freebayes', '-f', trim_ref, '-@', vcfile_vcf_gz, sorted_bamfile], stdout=vcfile, stderr=subprocess.PIPE).wait() #call variants at fixed locations
+
+def process_variants(temp_dir, trim_ref, shoulder_size, rDNA_unit_size, ext):
+	vcf_file = temp_dir + '/vcfile' + ext
+        #Break multi-allelic sites
+	try:
+        	process_breakmulti = subprocess.Popen(['vcfbreakmulti', vcf_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	except OSError:
+		exit_program('Error9: Cannot find vcflib.')
+        #Decompose biallelic sites
+	process_allelicprimitives = subprocess.Popen(['vcfallelicprimitives', '-kg'], stdin=process_breakmulti.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #Fix the field of alternate allelic depth
+	process_fix_depth = subprocess.Popen(['./vcf_ad_fix.sh'], stdin=process_allelicprimitives.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #normalise the vcf
+	try:
+		process_normalise = subprocess.Popen(['bcftools', 'norm', '-f', trim_ref, '-m-'], stdin=process_fix_depth.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	except OSError:
+		 exit_program('Error9: Cannot find bcftools.')
+        #relocate variants
+	relocated_vcf = temp_dir + '/relocated' + ext
+	subprocess.Popen([python, 'variant_relocator.py', relocated_vcf, str(shoulder_size+1), str(rDNA_unit_size+shoulder_size), '1'], stdin=process_normalise.stdout).wait()
+        #sort variants
+	sorted_vcf = temp_dir + '/sorted' + ext
+	with open (sorted_vcf, 'w') as sortedfile:                      #file object to write on the file
+		subprocess.Popen(['bcftools', 'sort', relocated_vcf], stdout=sortedfile, stderr=subprocess.PIPE).wait()
+	unified_dec_vcf = temp_dir + '/unified_dec' + ext
+	unify_variants(sorted_vcf, unified_dec_vcf, 1)       #unify decomposed variants
+	unified_rel_vcf = temp_dir + '/unified_rel' + ext
+	unify_variants(unified_dec_vcf, unified_rel_vcf, 0)     #unifying the relocated variants
+
+
 #main function
 def main(first_coordinate, last_coordinate):
 	max_read_length_fwd = max_line_length(fwd_reads_file)   #maximum read length in forward read file
@@ -187,7 +221,7 @@ class discover_variants():
 				elif args[i] == '--sub_sample' or args[i] == '-s':
 					sub_sample, sub = input_check(args, i, 'float')
 				elif args[i] == '--out' or args[i] == '-o':
-					out_vcf, out = input_check(args, i, 'str')                      #output vcf file
+					out_vcf, out = input_check(args, i, 'str_out')                      #output vcf file
 				else:
 					exit_program('Error0: Argument not recognised '+args[i])
 		#error and warning list

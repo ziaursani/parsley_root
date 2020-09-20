@@ -23,7 +23,7 @@ Proportion of pINSs = 0.01
 Proportion of variation in noncoding zone = 0.90
 Proportion of deletion & insertion in homopolymeric region = 0.50
 
-[Parameters for partial variation beta distributions]
+[Partial variation frequency parameters]
 Alpha = 0.365
 Beta = 0.818
 
@@ -32,7 +32,7 @@ Name and address of input reference fasta file = /home/ursani/programs/vg/S288c_
 First Coordinate of rDNA unit = 5614
 Last Coordinate of rDNA unit = 14750
 
-[Output simulated vcf and genome files]
+[Output svcf and rDNA fasta files]
 Name and address of output simulated vcf file = variants.svcf
 Name and address of output simulated rDNA fasta file = genome.fasta
 Length of line of rDNA file = 60

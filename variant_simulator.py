@@ -28,7 +28,7 @@ def parser():
         				lineseg2 += line[index2]
 			else:
 				if line[len(line)-1] == "\n":			#carraige return is additional locus of the line
-					for index in range(len(line)-1):
+					for index in range(len(line) - 1):
 						DNA_seq += line[index]
 				else:					#condition to identify last line of fasta
 					for index in range(len(line)):
@@ -43,7 +43,7 @@ def SNP_generator(DNA_seq, genome_size, var_status, times_base_muted):
 	else:
 		(locus, var_size, fail) = coord_selector_rDNA(var_status, times_base_muted, 0, [1, 1], genome_size, 'snp')
 	mutant = mutant_selector(DNA_seq, locus)
-	frq = frequency_assigner(var_status, nr_of_copies-times_base_muted[locus])
+	frq = frequency_assigner(var_status, nr_of_copies - times_base_muted[locus])
 	return (locus, mutant, frq, fail)
 
 #coordinate selector for deletion in non-homopolymeric region and non-coding zone
@@ -54,13 +54,13 @@ def coord_selector_noncoding_zone(var_status, times_base_muted, times_base_muted
 	while(loop):
 		itr += 1			#increment in number of iterations
 		loop = False
-		ncz_id = randint(0, nr_of_noncoding_reg-1)  #selection of non-coding zone
+		ncz_id = randint(0, nr_of_noncoding_reg - 1)  #selection of non-coding zone
 		var_size = randint(var_range[0], var_range[1])    #random selection of variation size for deletion
-		locus = randint(LB_for_noncoding_reg[ncz_id], UB_for_noncoding_reg[ncz_id]-var_size)   #locus to be muted
-		if var_type != 'snp' and (times_base_muted_indel[locus-1] > 0 or times_base_muted_indel[locus+var_size] > 0):   #to avoid continuous indel
+		locus = randint(LB_for_noncoding_reg[ncz_id], UB_for_noncoding_reg[ncz_id] - var_size)   #locus to be muted
+		if var_type != 'snp' and (times_base_muted_indel[locus - 1] > 0 or times_base_muted_indel[locus + var_size] > 0):   #to avoid continuous indel
 			loop = True
 		for j in range(var_size):
-			if (times_base_muted[locus+j] >  part_var_freq_range[1] or (var_status == 'fixed' and times_base_muted[locus+j] > 0)):
+			if (times_base_muted[locus + j] >  part_var_freq_range[1] or (var_status == 'fixed' and times_base_muted[locus + j] > 0)):
 				loop = True
 				break
 		if (itr > 1000):		#if more than 1000 iterations
@@ -77,11 +77,11 @@ def coord_selector_rDNA(var_status, times_base_muted, times_base_muted_indel, va
 		itr += 1                        #increment in number of iterations
 		loop = False
 		var_size = randint(var_range[0], var_range[1])    #random selection of variation size
-		locus = randint(1, genome_size-var_size)   #locus to be muted
-		if var_type != 'snp' and (times_base_muted_indel[locus-1] > 0 or times_base_muted_indel[locus+var_size] > 0):	#to avoid continuous indel
+		locus = randint(1, genome_size - var_size)   #locus to be muted
+		if var_type != 'snp' and (times_base_muted_indel[locus - 1] > 0 or times_base_muted_indel[locus + var_size] > 0):	#to avoid continuous indel
 			loop = True
 		for j in range(var_size):
-			if (times_base_muted[locus+j] > part_var_freq_range[1] or (var_status == 'fixed' and times_base_muted[locus+j] > 0)):
+			if (times_base_muted[locus + j] > part_var_freq_range[1] or (var_status == 'fixed' and times_base_muted[locus + j] > 0)):
 				loop = True
 				break
 		if (itr > 1000):                #if more than 1000 iterations
@@ -112,7 +112,7 @@ def DEL_generator(DNA_seq, genome_size, var_status, times_base_muted, times_base
 	else:
 		#coordinate selector in full rDNA
 		(locus, var_size, fail) = coord_selector_rDNA(var_status, times_base_muted, times_base_muted_del, [min_del_size, max_del_size], genome_size, 'del')
-	freq = frequency_assigner(var_status, nr_of_copies-times_base_muted[locus])
+	freq = frequency_assigner(var_status, nr_of_copies - times_base_muted[locus])
 	return (locus, var_size, freq, fail)
 
 #function to generate insertions
@@ -137,7 +137,7 @@ def INS_generator(DNA_seq, genome_size, var_status, times_base_muted, times_base
 		(locus, var_size, fail) = coord_selector_rDNA(var_status, times_base_muted, times_base_muted_ins,[min_ins_size, max_ins_size], genome_size, 'ins')
 		for j in range(var_size):
 			inserts += choice(bases)
-	frq = frequency_assigner(var_status, nr_of_copies-times_base_muted[locus])
+	frq = frequency_assigner(var_status, nr_of_copies - times_base_muted[locus])
 	return (locus, inserts, frq, fail)
 
 #generate coordinate of homopolymeric zone
@@ -156,13 +156,13 @@ def coord_selector_homo_zone(var_status, times_base_muted, times_base_muted_inde
 			if nslots[0] == 0:		##if no slots avaiable
 				prb_dist.append(0)
 			else:
-				prb_dist.append(nr_of_copies-nslots[0]+1)	##probability range for the first homopolymeric zone
+				prb_dist.append(nr_of_copies - nslots[0] + 1)	##probability range for the first homopolymeric zone
 			for i in range(1,  nr_of_homo_zones):				##probability distribution for the rest of homopolymeric zones
 				if nslots[i] == 0:	#if less vacant slots than minimum allowable frequency in this homopolymeric zone
-					prb_dist.append(prb_dist[i-1]+0)
+					prb_dist.append(prb_dist[i - 1] + 0)
 				else:
-					prb_dist.append(prb_dist[i-1]+nr_of_copies-nslots[i]+1)
-			rnd_prb = randint(1, prb_dist[nr_of_homo_zones-1])	##random selection from probability distribution
+					prb_dist.append(prb_dist[i - 1] + nr_of_copies - nslots[i] + 1)
+			rnd_prb = randint(1, prb_dist[nr_of_homo_zones - 1])	##random selection from probability distribution
 			for i in range(nr_of_homo_zones):			##selection of homopolymeric zone based on probability distribution
 				if rnd_prb <= prb_dist[i]:	
 					homo_zone = i
@@ -181,7 +181,7 @@ def coord_selector_homo_zone(var_status, times_base_muted, times_base_muted_inde
 		else:
 			while True:
 				itr += 1
-				homo_zone = randint(0,  nr_of_homo_zones-1)
+				homo_zone = randint(0,  nr_of_homo_zones - 1)
 				if nslots[homo_zone] == nr_of_copies: ##if all slots are vacant
 					homo_size = UB_for_homo_zone[homo_zone] - LB_for_homo_zone[homo_zone] + 1                 #computing size of homopolymer
 					var_size = indel_size(var_type, homo_size, bound)	##computing size of indel
@@ -198,16 +198,16 @@ def coord_selector_homo_zone(var_status, times_base_muted, times_base_muted_inde
 def compute_slots(LB_for_homo_zone, UB_for_homo_zone, nr_of_homo_zones, times_base_muted_indel, times_base_muted):
 	nslots = []             ##number of available slots
 	for i in range(nr_of_homo_zones):
-		if times_base_muted_indel[LB_for_homo_zone[i]-1] > 0:
+		if times_base_muted_indel[LB_for_homo_zone[i] - 1] > 0:
 			nslots.append(0)        ##no slot available if there is indel prior to start of the zone
 			continue
 		nfslots = 0      #number of filled slots
-		for j in range(LB_for_homo_zone[i], UB_for_homo_zone[i]+1):
+		for j in range(LB_for_homo_zone[i], UB_for_homo_zone[i] + 1):
 			nfslots = max(nfslots, times_base_muted[j])
 		if nr_of_copies-nfslots < part_var_freq_range[0]:	#if number of available slots are less than the allowable lower bound on frequency of the partial variation
 			nslots.append(0)
 		else:
-			nslots.append(nr_of_copies-nfslots)
+			nslots.append(nr_of_copies - nfslots)
 	return nslots
 
 ##computing size of indel
@@ -238,13 +238,13 @@ def file_writing(DNA_seq, lineseg1, lineseg2, SNP_list, SNP_coord, SNP_freq, DEL
 					coord = i
 					Type = 'SNP'
 			for i in range(len(DEL_coord)):
-				if DEL_coord[i]-1 < coordinate and not DEL_done[i]:
-					coordinate = DEL_coord[i]-1
+				if DEL_coord[i] - 1 < coordinate and not DEL_done[i]:
+					coordinate = DEL_coord[i] - 1
 					coord = i
 					Type = 'DEL'
 			for i in range(len(INS_coord)):
 				if INS_coord[i]-1 < coordinate and not INS_done[i]:
-					coordinate = INS_coord[i]-1
+					coordinate = INS_coord[i] - 1
 					coord = i
 					Type = 'INS'
 			if Type == 'SNP':
@@ -258,7 +258,7 @@ def file_writing(DNA_seq, lineseg1, lineseg2, SNP_list, SNP_coord, SNP_freq, DEL
 				file_handle.write('\t' + SNP_list[coord])
 				FREQ = SNP_freq[coord]
 			elif Type == 'DEL':
-				for i in range(1, DEL_size[coord]+1):
+				for i in range(1, DEL_size[coord] + 1):
 					file_handle.write(DNA_seq[coordinate + i])
 				file_handle.write('\t' + DNA_seq[coordinate])
 				FREQ = DEL_freq[coord]
@@ -291,16 +291,16 @@ def find_homopolymeric_zones(DNA_seq):
 		T = 0           #number of consecutive Ts
 		A = 0           #number of consecutive As
 		homo = False    #homopolymeric zone is not started yet
-		for i in range (LB_for_noncoding_reg[j]-1, UB_for_noncoding_reg[j]):
+		for i in range (LB_for_noncoding_reg[j] - 1, UB_for_noncoding_reg[j]):
 			T = compute_homopolymeric_base(DNA_seq[i], 'T', T)
 			A = compute_homopolymeric_base(DNA_seq[i], 'A', A)
 			if T == min_homo_size or A == min_homo_size:
-				LB_for_homo_zone.append(i-min_homo_size+1)	#minimum size for homopolymeric zone attained
+				LB_for_homo_zone.append(i - min_homo_size + 1)	#minimum size for homopolymeric zone attained
 				homo = True	#we are in a homopolymeric zone
 			if homo and T < min_homo_size and A < min_homo_size:
-				UB_for_homo_zone.append(i-1)	#homopolymeric zone ended 1 base before
+				UB_for_homo_zone.append(i - 1)	#homopolymeric zone ended 1 base before
 				homo = False	#end of homopolymeric tract
-				largest_homo_size = max(largest_homo_size, UB_for_homo_zone[len(UB_for_homo_zone)-1] - LB_for_homo_zone[len(LB_for_homo_zone)-1] + 1)
+				largest_homo_size = max(largest_homo_size, UB_for_homo_zone[len(UB_for_homo_zone) - 1] - LB_for_homo_zone[len(LB_for_homo_zone) - 1] + 1)
 	return (LB_for_homo_zone, UB_for_homo_zone, largest_homo_size)
 
 #function to compute homopolymeric bases
@@ -314,9 +314,9 @@ def compute_homopolymeric_base(DNA, base, n):
 #generation of variants
 def variant_generator(DNA_seq, lineseg1, lineseg2, LB_for_homo_zone, UB_for_homo_zone, nr_of_homo_zones, Largest_homo_size):
 	genome_size = len(DNA_seq)
-	times_base_muted = [0 for i in range(genome_size-min_ins_size+max_ins_size)] #size increased for variation which could go beyond standard size due to insertion
-	times_base_muted_del = [0 for i in range(genome_size-min_ins_size+max_ins_size)]     #exclusively for deletions
-	times_base_muted_ins = [0 for i in range(genome_size-min_ins_size+max_ins_size)]     #exclusively for insertions
+	times_base_muted = [0 for i in range(genome_size - min_ins_size + max_ins_size)] #size increased for variation which could go beyond standard size due to insertion
+	times_base_muted_del = [0 for i in range(genome_size - min_ins_size + max_ins_size)]     #exclusively for deletions
+	times_base_muted_ins = [0 for i in range(genome_size - min_ins_size + max_ins_size)]     #exclusively for insertions
 	SNP_coord = []                                   #coordinates of SNP
 	DEL_coord = []                                   #coordinates of deletion
 	INS_coord = []                                   #coordinates of insertion
@@ -376,15 +376,15 @@ def exit_program(error_message):
 def input_check(arg_name, arg_value, Type):
         if Type == 'int':
                 if not arg_value.isdigit():
-                        exit_program('Error2: Not a number: '+arg_name)
+                        exit_program('Error2: Not a number: ' + arg_name)
         elif Type == 'float':
                 if not arg_value.replace('.','',1).isdigit():
-                        exit_program('Error3: Not numeric: '+arg_name)
+                        exit_program('Error3: Not numeric: ' + arg_name)
                 if float(arg_value) < 0.0 or float(arg_value) > 1.0:
-                        exit_program('Error4: Out of range: '+arg_name)
+                        exit_program('Error4: Out of range: ' + arg_name)
         elif Type == 'str':
                 if not path.exists(arg_value):
-                        exit_program('Error5: Does not exist: '+arg_name)
+                        exit_program('Error5: Does not exist: ' + arg_name)
         return arg_value
 
 #main function
@@ -428,12 +428,14 @@ class generate_variants():
 		cum_prob_INS = cum_prob_part_DEL + proportion_INS             #commulative probability of insertion
 		proportion_pINS = float(input_check('Proportion of pINSs', variations['Proportion of pINSs'], 'float'))
 		cum_prob_part_INS = cum_prob_INS +  proportion_pINS            #commulative probability of  partial insertion
+		if cum_prob_part_INS != 1.0:
+			exit_program('Error10: Sum of proportion of variations should exactly be equal to 1.0')
 		prob_of_var_in_noncoding_zone = float(input_check('Proportion of variation in noncoding zone', variations['Proportion of variation in noncoding zone'], 'float'))
 		prob_homo_indel = float(input_check('Proportion of indel in homopolymeric region', variations['Proportion of deletion & insertion in homopolymeric region'], 'float'))
-		beta_dist_params = info['Parameters for partial variation beta distributions']
+		beta_dist_params = info['Partial variation frequency parameters']
 		alpha = float(input_check('Beta Distribution Parameter Alpha', beta_dist_params['Alpha'], 'float'))
 		beta = float(input_check('Beta Distribution Parameter Beta', beta_dist_params['Beta'], 'float'))
-		output_files = info['Output simulated vcf and genome files']
+		output_files = info['Output svcf and rDNA fasta files']
 		VCF = output_files['Name and address of output simulated vcf file']
 	def execute(self):
 		main()
