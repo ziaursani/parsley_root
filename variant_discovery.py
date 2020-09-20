@@ -118,14 +118,11 @@ def variant_discoverer(first_coordinate, last_coordinate, max_read_len, rDNA_uni
 			subprocess.Popen(['samtools', 'view', '-bS'], stdin=process_add_header.stdout, stdout=bam, stderr=subprocess.PIPE).wait()
 	#Stack the filtered reads under the reference - up to maximum depth using freebayes
 	vcf_file = temp_dir + '/vcfile.vcf'
-	print('@_')
-	subprocess.Popen(['date'])
 	with open (vcf_file, 'w') as vcfile:
 		try:
 			subprocess.Popen(['freebayes', '-f', trim_ref, '-F', '0.001', '--pooled-continuous', back_to_bam], stdout=vcfile, stderr=subprocess.PIPE).wait()
 		except OSError:
 			exit_program('Error9: Cannot find freebayes.')
-	subprocess.Popen(['date'])
 	process_variants(temp_dir, trim_ref, max_read_len-1, rDNA_unit_size, '.vcf')
 	#filter variants
 	unified_rel_vcf = temp_dir + '/unified_rel.vcf'
@@ -155,11 +152,8 @@ def retrieve_freq(temp_dir):     #function to retrieve frequencies
         subprocess.Popen(['tabix-0.2.6/tabix', '-p', 'vcf', vcfile_vcf_gz], stderr=subprocess.PIPE).wait()     #index the zipped vcf
         trim_ref = temp_dir + '/trim.fasta'
         fr_retrieved = temp_dir + '/vcfile_fr.vcf'
-        print('@fr')
-        subprocess.Popen(['date'])
         with open (fr_retrieved, 'w') as vcfile:
                 subprocess.Popen(['freebayes', '-f', trim_ref, '-@', vcfile_vcf_gz, sorted_bamfile], stdout=vcfile, stderr=subprocess.PIPE).wait() #call variants at fixed locations
-        subprocess.Popen(['date'])
 
 def process_variants(temp_dir, trim_ref, shoulder_size, rDNA_unit_size, ext):
 	vcf_file = temp_dir + '/vcfile' + ext
