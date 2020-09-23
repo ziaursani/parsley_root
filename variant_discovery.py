@@ -146,10 +146,10 @@ def retrieve_freq(temp_dir):     #function to retrieve frequencies
         vcfile_vcf_gz = vcfile_vcf + '.gz'
         try:
                 with open (vcfile_vcf_gz, 'w') as vcfgz:
-                        subprocess.Popen(['tabix-0.2.6/bgzip', '-c', vcfile_vcf], stdout=vcfgz, stderr=subprocess.PIPE).wait()  #zip the vcf
+                        subprocess.Popen(['bgzip', '-c', vcfile_vcf], stdout=vcfgz, stderr=subprocess.PIPE).wait()  #zip the vcf
         except OSError:
                 exit_program('Error9: Cannot find tabix.')
-        subprocess.Popen(['tabix-0.2.6/tabix', '-p', 'vcf', vcfile_vcf_gz], stderr=subprocess.PIPE).wait()     #index the zipped vcf
+        subprocess.Popen(['tabix', '-p', 'vcf', vcfile_vcf_gz], stderr=subprocess.PIPE).wait()     #index the zipped vcf
         trim_ref = temp_dir + '/trim.fasta'
         fr_retrieved = temp_dir + '/vcfile_fr.vcf'
         with open (fr_retrieved, 'w') as vcfile:
