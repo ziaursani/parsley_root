@@ -3,7 +3,7 @@ This is pre-release.
 Parsley Root: Pipeline for Analysis of Ribosomal Locus Evolution in Yeast (Reusable for Other Organisms Though)
 Version: V0
 Release Date: September 2020
-Dependencies: Python 3.6, BWA, Samtools including Bcftools, Freebayes, Vcflib, pIRS, Samclip, FAT-Cigar
+Dependencies: Python 3.6, BWA, Samtools including Bcftools, Freebayes, Vcflib, pIRS, Samclip, FAT-Cigar, Tabix
 Instructions for use
 Download from top right corner
 Unzip the folder
