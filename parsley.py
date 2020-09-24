@@ -37,7 +37,7 @@ def help_info(args):
 		print('Parsley Root: Pipeline for Analysis of Ribosomal Locus Evolution in Yeast (Reusable for Other Organisms Though)')
 		print('Version: V0')
 		print('Release Date: September 2020')
-		print('Dependencies: Python 3.6, Samtools including Bcftools, Freebayes, Vcflib, pIRS, Samclip, FAT-Cigar')
+		print('Dependencies: Python, BWA, Samtools including Bcftools, Freebayes, Vcflib, pIRS, Samclip, FAT-Cigar, Tabix')
 		print('Instructions for use')
 		print('Download from top right corner')
 		print('Unzip the folder')
