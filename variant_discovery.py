@@ -132,8 +132,8 @@ def variant_discoverer(first_coordinate, last_coordinate, max_read_len, rDNA_uni
 	#retrieve frquency
 	retrieve_freq(temp_dir)
 	process_variants(temp_dir, trim_ref, max_read_len-1, rDNA_unit_size, '_fr.vcf')
-	filtered_fr_vcf = temp_dir + '/vcfile_fr.vcf'
-	update_data(filtered_vcf, filtered_fr_vcf, out_vcf)                 #updating the data
+	unified_rel_vcf = temp_dir + '/unified_rel_fr.vcf'
+	update_data(filtered_vcf, unified_rel_vcf, out_vcf)                 #updating the data
 	subprocess.Popen(['rm', '-rf', temp_dir], stderr=subprocess.PIPE)
 
 #function to retrieve frequencies
