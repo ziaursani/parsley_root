@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
 import sys, getopt, subprocess, os
 from os import path
 from copy_number_estimation_median import estimate_copy_number_median
