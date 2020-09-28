@@ -44,7 +44,8 @@ This is pre-release.
                 * -n      --copy_number           number of copies of rDNA unit in the simulated variant
 * Usage:  ./parsley estimate_copy_number [options] [arguments]
 * About:  This outputs number of copies of rDNA unit.
-* Options:        These options are mutually exclusive
+# Options:
+        * These options are mutually exclusive
         * -M      --median        Statistical median of depth over the rDNA and non-rDNA regions of the chromosome
         * -R      --regression    Estimating number of copies based on regression analysis
 Usage:  ./parsley estimate_copy_number --median [arguments]
