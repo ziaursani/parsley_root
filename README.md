@@ -32,7 +32,7 @@ This is pre-release.
 * Usage:  ./parsley simulate_variants [arguments]
 * About:  This outputs genome, reads, and variant list of a simulated variant.
 # Arguments:
- * Mandatory:
+       * Mandatory:
                 * -       -                       Configuration file present in the parsley repository. Change parameters as they suite the strains under your study.
 Usage:   ./parsley compare_variants [arguments]
 About:   This compares variants in the simulated strain against predicted variants, by reporting false positives and true negatives.
