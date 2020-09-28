@@ -19,7 +19,7 @@ This is pre-release.
         * estimate_copy_number    Estimates number of copies of Ribosomal DNA unit
 * Usage:  ./parsley discover_variants [arguments]
 * About:  This discovers variants in the Illumina reads from variant strain against a reference sequence of Ribosomal DNA. It gives output in vcf format.
-* Arguments:
+# Arguments:
         * Mandatory:
                 * -f      --rDNA_reference        Reference fasta file of rDNA
                 * -u      --unit_start            Start locus of rDNA unit in the reference file
