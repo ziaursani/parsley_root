@@ -29,11 +29,11 @@ This is pre-release.
                 * -o      --out                   Output VCF file
         * Optional:
                 * -s      --sub_sample            Takes (0 < x < 1) portion of reads at random
-Usage:  ./parsley simulate_variants [arguments]
-About:  This outputs genome, reads, and variant list of a simulated variant.
-Arguments:
- Mandatory:
-                -       -                       Configuration file present in the parsley repository. Change parameters as they suite the strains under your study.
+* Usage:  ./parsley simulate_variants [arguments]
+* About:  This outputs genome, reads, and variant list of a simulated variant.
+# Arguments:
+ * Mandatory:
+                * -       -                       Configuration file present in the parsley repository. Change parameters as they suite the strains under your study.
 Usage:   ./parsley compare_variants [arguments]
 About:   This compares variants in the simulated strain against predicted variants, by reporting false positives and true negatives.
 Arguments:
