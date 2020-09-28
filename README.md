@@ -17,18 +17,18 @@ This is pre-release.
         * simulate_variants       Simulates variant strains from reference sequence.
         * compare_variants        Compares variants in simulated strain against predicted variants of the strain.
         * estimate_copy_number    Estimates number of copies of Ribosomal DNA unit
-Usage:  ./parsley discover_variants [arguments]
-About:  This discovers variants in the Illumina reads from variant strain against a reference sequence of Ribosomal DNA. It gives output in vcf format.
-Arguments:
-        Mandatory:
-                -f      --rDNA_reference        Reference fasta file of rDNA
-                -u      --unit_start            Start locus of rDNA unit in the reference file
-                -v      --unit_end              End locus of rDNA unit in the reference file
-                -r      --reads1                Forward reads fastq file
-                -q      --reads2                Reverse reads fastq file
-                -o      --out                   Output VCF file
-        Optional:
-                -s      --sub_sample            Takes (0 < x < 1) portion of reads at random
+* Usage:  ./parsley discover_variants [arguments]
+* About:  This discovers variants in the Illumina reads from variant strain against a reference sequence of Ribosomal DNA. It gives output in vcf format.
+* Arguments:
+        * Mandatory:
+                * -f      --rDNA_reference        Reference fasta file of rDNA
+                * -u      --unit_start            Start locus of rDNA unit in the reference file
+                * -v      --unit_end              End locus of rDNA unit in the reference file
+                * -r      --reads1                Forward reads fastq file
+                * -q      --reads2                Reverse reads fastq file
+                * -o      --out                   Output VCF file
+        * Optional:
+                * -s      --sub_sample            Takes (0 < x < 1) portion of reads at random
 Usage:  ./parsley simulate_variants [arguments]
 About:  This outputs genome, reads, and variant list of a simulated variant.
 Arguments:
