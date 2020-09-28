@@ -1,8 +1,5 @@
 # parsley_root
 This is pre-release.
-&nbsp;
-
-&nbsp;
 ##
 Parsley Root: Pipeline for Analysis of Ribosomal Locus Evolution in Yeast (Reusable for Other Organisms Though)
 Version: V0
