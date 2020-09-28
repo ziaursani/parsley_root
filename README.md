@@ -34,14 +34,14 @@ This is pre-release.
 # Arguments:
        * Mandatory:
                 * -       -                       Configuration file present in the parsley repository. Change parameters as they suite the strains under your study.
-Usage:   ./parsley compare_variants [arguments]
-About:   This compares variants in the simulated strain against predicted variants, by reporting false positives and true negatives.
-Arguments:
- Mandatory:
-                -I      --simulated_vcf         variant list of simulated strain obtained from "simulate_variants" command
-                -i      --predictive_vcf        variant list of simulated strain obtained from "discover_variants" command
-                -o      --comparative_vcf       comparison of variants of other two input variant lists (output)
-                -n      --copy_number           number of copies of rDNA unit in the simulated variant
+* Usage:   ./parsley compare_variants [arguments]
+* About:   This compares variants in the simulated strain against predicted variants, by reporting false positives and true negatives.
+# Arguments:
+       * Mandatory:
+                * -I      --simulated_vcf         variant list of simulated strain obtained from "simulate_variants" command
+                * -i      --predictive_vcf        variant list of simulated strain obtained from "discover_variants" command
+                * -o      --comparative_vcf       comparison of variants of other two input variant lists (output)
+                * -n      --copy_number           number of copies of rDNA unit in the simulated variant
 Usage:  ./parsley estimate_copy_number [options] [arguments]
 About:  This outputs number of copies of rDNA unit.
 Options:        These options are mutually exclusive
