@@ -42,11 +42,11 @@ This is pre-release.
                 * -i      --predictive_vcf        variant list of simulated strain obtained from "discover_variants" command
                 * -o      --comparative_vcf       comparison of variants of other two input variant lists (output)
                 * -n      --copy_number           number of copies of rDNA unit in the simulated variant
-Usage:  ./parsley estimate_copy_number [options] [arguments]
-About:  This outputs number of copies of rDNA unit.
-Options:        These options are mutually exclusive
-        -M      --median        Statistical median of depth over the rDNA and non-rDNA regions of the chromosome
-        -R      --regression    Estimating number of copies based on regression analysis
+* Usage:  ./parsley estimate_copy_number [options] [arguments]
+* About:  This outputs number of copies of rDNA unit.
+* Options:        These options are mutually exclusive
+        * -M      --median        Statistical median of depth over the rDNA and non-rDNA regions of the chromosome
+        * -R      --regression    Estimating number of copies based on regression analysis
 Usage:  ./parsley estimate_copy_number --median [arguments]
 About:  This outputs number of copies of rDNA unit based on median method
 Arguments:
