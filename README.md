@@ -58,18 +58,18 @@ This is pre-release.
                 * -n      --rDNA_name             Name of chromosome containing rDNA
                 * -r      --reads1                Farward reads fastq file
                 * -q      --reads2                Reverse reads fastq file
-Usage:   ./parsley estimate_copy_number --regression [arguments]
-About:  This outputs number of copies of rDNA unit based on regression method
-Arguments:
-        Mandatory:
-        -F      --whole_reference       Reference fasta file of whole genome
-        -U      --rDNA_start            Start locus of rDNA in the chromosome
-        -V      --rDNA_end              End locus of rDNA in the chromosome
-        -b      --buffer                Number of nucleotides between rDNA and non-rDNA region
-        -f      --rDNA_referene         Reference fasta file for rDNA
-        -u      --unit_start            Starting nucleotide of rDNA unit
-        -v      --unit_end              End nucleotide of rDNA unit
-        -r      --reads1                Farward reads fastq file
-        -q      --reads2                Reverse reads fastq file
-        -w      --window_size           Window size for sliding function
-        -s      --step_size             Step size for sliding function
+* Usage:   ./parsley estimate_copy_number --regression [arguments]
+* About:  This outputs number of copies of rDNA unit based on regression method
+# Arguments:
+        * Mandatory:
+              * -F      --whole_reference       Reference fasta file of whole genome
+              * -U      --rDNA_start            Start locus of rDNA in the chromosome
+              * -V      --rDNA_end              End locus of rDNA in the chromosome
+              * -b      --buffer                Number of nucleotides between rDNA and non-rDNA region
+              * -f      --rDNA_referene         Reference fasta file for rDNA
+              * -u      --unit_start            Starting nucleotide of rDNA unit
+              * -v      --unit_end              End nucleotide of rDNA unit
+              * -r      --reads1                Farward reads fastq file
+              * -q      --reads2                Reverse reads fastq file
+              * -w      --window_size           Window size for sliding function
+              * -s      --step_size             Step size for sliding function
