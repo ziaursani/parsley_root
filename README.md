@@ -1,41 +1,22 @@
 # parsley_root
 This is pre-release.
 * Parsley Root: Pipeline for Analysis of Ribosomal Locus Evolution in Yeast (Reusable for Other Organisms Though)
-*
-Version: V0
-#
-Release Date: September 2020
-#
-Dependencies: Python, BWA, Samtools including Bcftools, Freebayes, Vcflib, pIRS, Samclip, FAT-Cigar, Tabix
-#
+* Version: V0
+* Release Date: September 2020
+* Dependencies: Python, BWA, Samtools including Bcftools, Freebayes, Vcflib, pIRS, Samclip, FAT-Cigar, Tabix
 # Instructions for use
-#
-Download from top right corner
-#
-Unzip the folder
-#
-Create link
-#
-chmod +x parsley.py
-#
-ln -s parsley.py parsley
-#
-# for use
-#
-Type ./parsley --help
-#
-or follow instructions below:
-#
-These commands are mutually exclusive
-#
-        discover_variants       Discovers variants in strain against reference sequence.
-        #
-        simulate_variants       Simulates variant strains from reference sequence.
-        #
-        compare_variants        Compares variants in simulated strain against predicted variants of the strain.
-        #
-        estimate_copy_number    Estimates number of copies of Ribosomal DNA unit
-        #
+* Download from top right corner
+* Unzip the folder
+# Create link
+* chmod +x parsley.py
+* ln -s parsley.py parsley
+# For Help
+* Type ./parsley --help
+# Commands
+        * discover_variants       Discovers variants in strain against reference sequence.
+        * simulate_variants       Simulates variant strains from reference sequence.
+        * compare_variants        Compares variants in simulated strain against predicted variants of the strain.
+        * estimate_copy_number    Estimates number of copies of Ribosomal DNA unit
 Usage:  ./parsley discover_variants [arguments]
 About:  This discovers variants in the Illumina reads from variant strain against a reference sequence of Ribosomal DNA. It gives output in vcf format.
 Arguments:
