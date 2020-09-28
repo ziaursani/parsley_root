@@ -48,16 +48,16 @@ This is pre-release.
         * These options are mutually exclusive
         * -M      --median        Statistical median of depth over the rDNA and non-rDNA regions of the chromosome
         * -R      --regression    Estimating number of copies based on regression analysis
-Usage:  ./parsley estimate_copy_number --median [arguments]
-About:  This outputs number of copies of rDNA unit based on median method
-Arguments:
-        Mandatory:
-                -F      --whole_reference       Reference fasta file of whole genome
-                -U      --rDNA_start            Start locus of rDNA in the chromosome
-                -V      --rDNA_end              End locus of rDNA in the chromosome
-                -n      --rDNA_name             Name of chromosome containing rDNA
-                -r      --reads1                Farward reads fastq file
-                -q      --reads2                Reverse reads fastq file
+* Usage:  ./parsley estimate_copy_number --median [arguments]
+* About:  This outputs number of copies of rDNA unit based on median method
+# Arguments:
+        * Mandatory:
+                * -F      --whole_reference       Reference fasta file of whole genome
+                * -U      --rDNA_start            Start locus of rDNA in the chromosome
+                * -V      --rDNA_end              End locus of rDNA in the chromosome
+                * -n      --rDNA_name             Name of chromosome containing rDNA
+                * -r      --reads1                Farward reads fastq file
+                * -q      --reads2                Reverse reads fastq file
 Usage:   ./parsley estimate_copy_number --regression [arguments]
 About:  This outputs number of copies of rDNA unit based on regression method
 Arguments:
