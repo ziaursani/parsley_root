@@ -138,10 +138,6 @@ def variant_discoverer(first_coordinate, last_coordinate, max_read_len, rDNA_uni
 
 #function to retrieve frequencies
 def retrieve_freq(temp_dir):     #function to retrieve frequencies
-        bamfile = temp_dir + '/bamfile.bam'
-        sorted_bamfile = temp_dir + '/bamfile_sorted.bam'
-        subprocess.Popen(['samtools', 'sort', bamfile, '-o', sorted_bamfile]).wait()
-        subprocess.Popen(['samtools', 'index', sorted_bamfile]).wait()
         vcfile_vcf = temp_dir + '/vcfile.vcf'
         vcfile_vcf_gz = vcfile_vcf + '.gz'
         try:
@@ -151,6 +147,7 @@ def retrieve_freq(temp_dir):     #function to retrieve frequencies
                 exit_program('Error9: Cannot find tabix.')
         subprocess.Popen(['tabix', '-p', 'vcf', vcfile_vcf_gz], stderr=subprocess.PIPE).wait()     #index the zipped vcf
         trim_ref = temp_dir + '/trim.fasta'
+	sorted_bamfile = temp_dir + '/bamfile_sorted.bam'
         fr_retrieved = temp_dir + '/vcfile_fr.vcf'
         with open (fr_retrieved, 'w') as vcfile:
                 subprocess.Popen(['freebayes', '-f', trim_ref, '-@', vcfile_vcf_gz, sorted_bamfile], stdout=vcfile, stderr=subprocess.PIPE).wait() #call variants at fixed locations
